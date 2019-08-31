@@ -1,15 +1,17 @@
 package com.example.scrollsnadbox
 
 import android.content.Context
+import android.content.res.Resources
 import android.util.AttributeSet
+import android.util.DisplayMetrics
 import android.util.Log
+import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.core.view.NestedScrollingChild
 import androidx.core.view.NestedScrollingParent
-import androidx.core.view.ViewCompat
 
 
 class PullToRef @JvmOverloads constructor(
@@ -27,7 +29,7 @@ class PullToRef @JvmOverloads constructor(
     private var mInitialDownY: Float = 0.toFloat()
     private val mTouchSlop: Int = 0;
     private var mIsBeingDragged: Boolean = false
-    private val DRAG_RATE = .5f
+    private val DRAG_RATE = 1f
 
     private var mTotalDragDistance = -1f
     protected var mOriginalOffsetTop: Int = 0
@@ -96,6 +98,7 @@ class PullToRef @JvmOverloads constructor(
     private fun createProgressView() {
         mCircleView = ImageView(context)
         mCircleView.setImageResource(R.drawable.ic_launcher_foreground)
+        mCircleView.setBackgroundColor(R.color.colorAccent)
         addView(mCircleView)
     }
 
@@ -109,11 +112,11 @@ class PullToRef @JvmOverloads constructor(
     }
 
     internal fun setTargetOffsetTopAndBottom(offset: Int) {
-        Log.d(LOG_TAG, "${offset}")
-        ViewCompat.offsetTopAndBottom(mCircleView, offset)
-//        mCurrentTargetOffsetTop = mCircleView.getTop()
+        Log.d(LOG_TAG, " offset ${offset}")
+//        ViewCompat.offsetTopAndBottom(mCircleView, offset)
+        mCircleView.top = offset
+        mCurrentTargetOffsetTop = mCircleView.getTop()
     }
-
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         val action = ev.actionMasked
@@ -145,16 +148,13 @@ class PullToRef @JvmOverloads constructor(
 
                 if (mIsBeingDragged) {
                     val overscrollTop = (y - mInitialMotionY) * DRAG_RATE
+
                     if (overscrollTop > 0) {
-
-                        val originalDragPercent = overscrollTop / mTotalDragDistance
-                        val dragPercent = Math.min(1f, Math.abs(originalDragPercent))
-
-                        val extraMove = 5 * 2f
-                        val targetY =
-                            mOriginalOffsetTop + (dragPercent + extraMove).toInt()
-                        setTargetOffsetTopAndBottom(targetY - mCurrentTargetOffsetTop)
+                        val px = overscrollTop.toPx(Resources.getSystem().displayMetrics)
+                        val dp = overscrollTop.toDp(Resources.getSystem().displayMetrics)
+                        setTargetOffsetTopAndBottom(overscrollTop.toInt())
                     } else {
+                        setTargetOffsetTopAndBottom(0)
                         return false
                     }
                 }
@@ -170,9 +170,6 @@ class PullToRef @JvmOverloads constructor(
                     return false
                 }
                 mActivePointerId = ev.getPointerId(pointerIndex)
-            }
-            MotionEvent.ACTION_POINTER_UP -> {
-                setTargetOffsetTopAndBottom(0)
             }
         }
         return true
@@ -199,9 +196,29 @@ class PullToRef @JvmOverloads constructor(
                 val y = ev.getY(pointerIndex)
                 startDragging(y)
             }
+            MotionEvent.ACTION_DOWN -> {
+                setTargetOffsetTopAndBottom(mOriginalOffsetTop - mCircleView.top)
+                mActivePointerId = ev.getPointerId(0)
+                mIsBeingDragged = false
+
+                pointerIndex = ev.findPointerIndex(mActivePointerId)
+                if (pointerIndex < 0) {
+                    return false
+                }
+                mInitialDownY = ev.getY(pointerIndex)
+            }
         }
         return true
     }
 
 
 }
+
+fun Int.toDp(displayMetrics: DisplayMetrics) = toFloat().toDp(displayMetrics).toInt()
+
+fun Float.toDp(displayMetrics: DisplayMetrics) =
+    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this, displayMetrics)
+
+fun Float.toPx(displayMetrics: DisplayMetrics) =
+    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_PX, this, displayMetrics)
+
