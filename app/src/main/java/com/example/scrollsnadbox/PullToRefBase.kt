@@ -6,31 +6,29 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.core.view.NestedScrollingChild
 import androidx.core.view.NestedScrollingParent
 
 
-class PullToRef @JvmOverloads constructor(
+open class PullToRefBase @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ViewGroup(context, attrs, defStyleAttr),
     NestedScrollingParent,
     NestedScrollingChild {
 
-    private val LOG_TAG = PullToRef::class.java.getSimpleName()
+    private val LOG_TAG = PullToRefBase::class.java.getSimpleName()
 
-    private lateinit var mCircleView: ImageView
     private var mActivePointerId: Int = 0
     private var mInitialMotionY: Float = 0.toFloat()
     private var mInitialDownY: Float = 0.toFloat()
     private var mIsBeingDragged: Boolean = false
 
-    internal var mCurrentTargetOffsetTop: Int = 0
-
     private var mTarget: View? = null // the target of the gesture
 
-    init {
-        createProgressView()
+    private var pullListener: PullListener? = null
+
+    fun setListener(pullListener: PullListener) {
+        this.pullListener = pullListener
     }
 
     override fun onLayout(p0: Boolean, p1: Int, p2: Int, p3: Int, p4: Int) {
@@ -79,21 +77,11 @@ class PullToRef @JvmOverloads constructor(
         if (mTarget == null) {
             for (i in 0 until childCount) {
                 val child = getChildAt(i)
-//                if (child != mCircleView) {
                 mTarget = child
                 break
-//                }
             }
         }
     }
-
-    private fun createProgressView() {
-        mCircleView = ImageView(context)
-        mCircleView.setImageResource(R.drawable.ic_launcher_foreground)
-        mCircleView.setBackgroundColor(R.color.colorAccent)
-        addView(mCircleView)
-    }
-
 
     private fun startDragging(y: Float) {
         val yDiff = y - mInitialDownY
@@ -101,12 +89,6 @@ class PullToRef @JvmOverloads constructor(
             mInitialMotionY = mInitialDownY
             mIsBeingDragged = true
         }
-    }
-
-    private fun setTargetOffsetTopAndBottom(offset: Int) {
-        Log.d(LOG_TAG, " offset ${offset}")
-        mCircleView.top = offset
-        mCurrentTargetOffsetTop = mCircleView.getTop()
     }
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
@@ -128,7 +110,7 @@ class PullToRef @JvmOverloads constructor(
 
             MotionEvent.ACTION_UP -> {
                 mIsBeingDragged = false
-                setTargetOffsetTopAndBottom(0)
+                pullListener?.onRelease()
             }
 
             MotionEvent.ACTION_MOVE -> {
@@ -143,10 +125,9 @@ class PullToRef @JvmOverloads constructor(
 
                 if (mIsBeingDragged) {
                     val overscrollTop = (y - mInitialMotionY)
-                    if (overscrollTop > 0) {
-                        setTargetOffsetTopAndBottom(overscrollTop.toInt())
-                    } else {
-                        setTargetOffsetTopAndBottom(0)
+                    pullListener?.onPull(overscrollTop)
+
+                    if (overscrollTop <= 0) {
                         return false
                     }
                 }
@@ -167,4 +148,9 @@ class PullToRef @JvmOverloads constructor(
         return true
     }
 
+}
+
+interface PullListener {
+    fun onPull(distance: Float)
+    fun onRelease()
 }

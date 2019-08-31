@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.example.scrollsnadbox.PullToRef
+    <com.example.scrollsnadbox.PullRefView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorPrimary"
@@ -33,7 +33,7 @@
         <!--</LinearLayout>-->
 
 
-    </com.example.scrollsnadbox.PullToRef>
+    </com.example.scrollsnadbox.PullRefView>
 
     <!--    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout-->
     <!--        android:layout_width="match_parent"-->
