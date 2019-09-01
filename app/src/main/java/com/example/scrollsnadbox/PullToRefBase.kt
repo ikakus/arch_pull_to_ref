@@ -86,7 +86,7 @@ abstract class PullToRefBase @JvmOverloads constructor(
 
     }
 
-    private fun ensureTarget() {
+    open fun ensureTarget() {
         // Don't bother getting the parent height if the parent hasn't been laid
         // out yet.
         if (mTarget == null) {
