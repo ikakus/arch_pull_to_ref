@@ -1,6 +1,10 @@
 package com.example.scrollsnadbox
 
 import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 
@@ -9,7 +13,7 @@ class PullRefView @JvmOverloads constructor(
 ) : PullToRefBase(context, attrs, defStyleAttr) {
 
     private val container by lazy { mTarget!! }
-    private lateinit var headerView: View
+    private lateinit var headerView: ArchView
 
     private val headerTag = "tag"
 
@@ -18,8 +22,7 @@ class PullRefView @JvmOverloads constructor(
     }
 
     private fun createProgressView() {
-        headerView = View(context)
-        headerView.setBackgroundColor(resources.getColor(R.color.colorAccent))
+        headerView = ArchView(context)
         headerView.tag = headerTag
         addView(headerView)
     }
@@ -58,4 +61,19 @@ class PullRefView @JvmOverloads constructor(
 
     }
 
+}
+
+open class ArchView @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
+
+    override fun onDraw(canvas: Canvas) {
+        val p = Paint()
+        val h = top - bottom
+        val offset = 150
+        val rectF =
+            RectF(left.toFloat() - offset, h.toFloat(), right.toFloat() + offset, bottom.toFloat())
+        p.color = Color.BLACK
+        canvas.drawArc(rectF, 0f, 180f, false, p)
+    }
 }
