@@ -6,12 +6,16 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
+import androidx.core.view.ViewCompat
 
 class PullRefView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : PullToRefBase(context, attrs, defStyleAttr) {
 
+    val TAG = "test"
+    private var currentTargetOffsetTop = 0
     private val container by lazy { mTarget!! }
     private lateinit var headerView: ArchView
 
@@ -27,18 +31,27 @@ class PullRefView @JvmOverloads constructor(
         addView(headerView)
     }
 
+
     override fun onPull(distance: Float) {
-        headerView.bottom = distance.toInt()
-        if (distance >= 0) {
-            container.top = distance.toInt()
-        } else {
-            container.top = 0
-        }
+        var dist = distance.toInt() - currentTargetOffsetTop
+
+        move(dist)
+
+        Log.d(TAG, "dist $dist")
+        Log.d(TAG, "offset $currentTargetOffsetTop")
+
+    }
+
+    private fun move(offset: Int) {
+        ViewCompat.offsetTopAndBottom(container, offset)
+        currentTargetOffsetTop = container.top
     }
 
     override fun onLayout(p0: Boolean, p1: Int, p2: Int, p3: Int, p4: Int) {
         super.onLayout(p0, p1, p2, p3, p4)
         headerView.layout(0, 0, width, 0)
+
+        currentTargetOffsetTop = container.top
     }
 
     override fun ensureTarget() {
@@ -56,9 +69,8 @@ class PullRefView @JvmOverloads constructor(
     }
 
     override fun onRelease() {
-        container.top = 0
-        headerView.bottom = 0
-
+        move(0 - currentTargetOffsetTop)
+        Log.d(TAG, "On release offset $currentTargetOffsetTop")
     }
 
 }
@@ -74,6 +86,6 @@ open class ArchView @JvmOverloads constructor(
         val rectF =
             RectF(left.toFloat() - offset, h.toFloat(), right.toFloat() + offset, bottom.toFloat())
         p.color = Color.BLACK
-        canvas.drawArc(rectF, 0f, 180f, false, p)
+        canvas.drawArc(rectF, 0f, 180f, true, p)
     }
 }

@@ -241,24 +241,13 @@ abstract class PullToRefBase @JvmOverloads constructor(
         mNestedScrollInProgress = false
 
         if (mTotalUnconsumed > 0) {
-            onRelease()
             mTotalUnconsumed = 0f
         }
+        onRelease()
         stopNestedScroll()
     }
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray) {
-        if (dy > 0 && mTotalUnconsumed > 0) {
-            if (dy > mTotalUnconsumed) {
-                consumed[1] = dy - mTotalUnconsumed.toInt()
-                mTotalUnconsumed = 0f
-            } else {
-                mTotalUnconsumed -= dy.toFloat()
-                consumed[1] = dy
-            }
-            onPull(mTotalUnconsumed)
-        }
-
         val parentConsumed = mParentScrollConsumed
         if (dispatchNestedPreScroll(dx - consumed[0], dy - consumed[1], parentConsumed, null)) {
             consumed[0] += parentConsumed[0]
@@ -278,8 +267,13 @@ abstract class PullToRefBase @JvmOverloads constructor(
         val dy = dyUnconsumed + mParentOffsetInWindow[1]
         if (dy < 0 && !canChildScrollUp()) {
             mTotalUnconsumed += Math.abs(dy).toFloat()
-            onPull(mTotalUnconsumed)
         }
+
+        if (dy > 0 && !canChildScrollDown()) {
+            mTotalUnconsumed -= Math.abs(dy).toFloat()
+        }
+
+        onPull(mTotalUnconsumed)
     }
 
     // NestedScrollingChild
@@ -358,5 +352,11 @@ abstract class PullToRefBase @JvmOverloads constructor(
         } else mTarget?.canScrollVertically(-1) == true
     }
 
+
+    private fun canChildScrollDown(): Boolean {
+        return if (mTarget is ListView) {
+            ListViewCompat.canScrollList(mTarget as ListView, 1)
+        } else mTarget?.canScrollVertically(1) == true
+    }
 
 }
