@@ -23,7 +23,9 @@ class MainActivity : AppCompatActivity(), Onclick {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        (1..30).forEach { element -> myDataset.add(element.toString()) }
+        val range = 1..10
+
+        (range).forEach { element -> myDataset.add(element.toString()) }
         viewManager = LinearLayoutManager(this)
         viewAdapter = MyAdapter(myDataset)
         viewAdapter.setClickListener(this)

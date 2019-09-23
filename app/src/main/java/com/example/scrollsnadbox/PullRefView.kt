@@ -35,6 +35,7 @@ class PullRefView @JvmOverloads constructor(
     override fun onPull(distance: Float) {
         var dist = distance.toInt() - currentTargetOffsetTop
 
+        anim(distance.toInt())
         move(dist)
 
         Log.d(TAG, "dist $dist")
@@ -45,6 +46,10 @@ class PullRefView @JvmOverloads constructor(
     private fun move(offset: Int) {
         ViewCompat.offsetTopAndBottom(container, offset)
         currentTargetOffsetTop = container.top
+    }
+
+    private fun anim(offset: Int) {
+        headerView.bottom = offset
     }
 
     override fun onLayout(p0: Boolean, p1: Int, p2: Int, p3: Int, p4: Int) {
@@ -69,6 +74,7 @@ class PullRefView @JvmOverloads constructor(
     }
 
     override fun onRelease() {
+        anim(0)
         move(0 - currentTargetOffsetTop)
         Log.d(TAG, "On release offset $currentTargetOffsetTop")
     }

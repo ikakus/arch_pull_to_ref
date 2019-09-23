@@ -249,6 +249,29 @@ abstract class PullToRefBase @JvmOverloads constructor(
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray) {
         val parentConsumed = mParentScrollConsumed
+
+        if (dy > 0 && mTotalUnconsumed > 0) {
+            if (dy > mTotalUnconsumed) {
+                consumed[1] = dy - mTotalUnconsumed.toInt()
+                mTotalUnconsumed = 0f
+            } else {
+                mTotalUnconsumed -= dy.toFloat()
+                consumed[1] = dy
+            }
+            onPull(mTotalUnconsumed)
+        }
+
+        if (dy < 0 && mTotalUnconsumed < 0) {
+            if (dy < mTotalUnconsumed) {
+                consumed[1] = dy + mTotalUnconsumed.toInt()
+                mTotalUnconsumed = 0f
+            } else {
+                mTotalUnconsumed -= dy.toFloat()
+                consumed[1] = dy
+            }
+            onPull(mTotalUnconsumed)
+        }
+
         if (dispatchNestedPreScroll(dx - consumed[0], dy - consumed[1], parentConsumed, null)) {
             consumed[0] += parentConsumed[0]
             consumed[1] += parentConsumed[1]
@@ -345,13 +368,11 @@ abstract class PullToRefBase @JvmOverloads constructor(
         return mNestedScrollingChildHelper.dispatchNestedPreFling(velocityX, velocityY)
     }
 
-
     private fun canChildScrollUp(): Boolean {
         return if (mTarget is ListView) {
             ListViewCompat.canScrollList(mTarget as ListView, -1)
         } else mTarget?.canScrollVertically(-1) == true
     }
-
 
     private fun canChildScrollDown(): Boolean {
         return if (mTarget is ListView) {
