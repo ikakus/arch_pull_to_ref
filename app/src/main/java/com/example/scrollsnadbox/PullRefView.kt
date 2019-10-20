@@ -9,7 +9,9 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.core.view.ViewCompat
+
 
 class PullRefView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -86,16 +88,14 @@ class PullRefView @JvmOverloads constructor(
 
     override fun onRelease() {
         val valAnim = ValueAnimator.ofInt(currentTargetOffsetTop, 0)
-        valAnim.duration = 200L
+        valAnim.duration = 100L
+        valAnim.interpolator = AccelerateDecelerateInterpolator()
         valAnim.addUpdateListener { it ->
             val value = it.animatedValue as Int
             anim(value)
             move(value - currentTargetOffsetTop)
         }
         valAnim.start();
-
-//        anim(0)
-//        move(0 - currentTargetOffsetTop)
         Log.d(TAG, "On release offset $currentTargetOffsetTop")
     }
 
