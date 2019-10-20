@@ -22,25 +22,25 @@ abstract class PullToRefBase @JvmOverloads constructor(
     abstract fun onPull(distance: Float)
     abstract fun onRelease()
 
-    private var mActivePointerId: Int = 0
-    private var mInitialMotionY: Float = 0.toFloat()
-    private var mInitialDownY: Float = 0.toFloat()
-    private var mIsBeingDragged: Boolean = false
+    private var activePointerId: Int = 0
+    private var initialMotionY: Float = 0.toFloat()
+    private var initialDownY: Float = 0.toFloat()
+    private var isBeingDragged: Boolean = false
 
     // If nested scrolling is enabled, the total amount that needed to be
     // consumed by this as the nested scrolling parent is used in place of the
     // overscroll determined by MOVE events in the onTouch handler
-    private var mTotalUnconsumed: Float = 0.toFloat()
-    private val mNestedScrollingParentHelper: NestedScrollingParentHelper =
+    private var totalUnconsumed: Float = 0.toFloat()
+    private val nestedScrollingParentHelper: NestedScrollingParentHelper =
         NestedScrollingParentHelper(this)
-    private val mNestedScrollingChildHelper: NestedScrollingChildHelper =
+    private val nestedScrollingChildHelper: NestedScrollingChildHelper =
         NestedScrollingChildHelper(this)
-    private val mParentScrollConsumed = IntArray(2)
-    private val mParentOffsetInWindow = IntArray(2)
-    private var mNestedScrollInProgress: Boolean = false
+    private val parentScrollConsumed = IntArray(2)
+    private val parentOffsetInWindow = IntArray(2)
+    private var nestedScrollInProgress: Boolean = false
 
 
-    open var mTarget: View? = null // the target of the gesture
+    open var target: View? = null // the target of the gesture
 
     init {
         isNestedScrollingEnabled = true
@@ -52,29 +52,29 @@ abstract class PullToRefBase @JvmOverloads constructor(
         if (childCount == 0) {
             return
         }
-        if (mTarget == null) {
+        if (target == null) {
             ensureTarget()
         }
-        if (mTarget == null) {
+        if (target == null) {
             return
         }
-        val child = mTarget
+        val child = target
         val childLeft = paddingLeft
         val childTop = paddingTop
         val childWidth = width - paddingLeft - paddingRight
         val childHeight = height - paddingTop - paddingBottom
-        child!!.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight)
+        child?.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight)
     }
 
     public override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        if (mTarget == null) {
+        if (target == null) {
             ensureTarget()
         }
-        if (mTarget == null) {
+        if (target == null) {
             return
         }
-        mTarget!!.measure(
+        target?.measure(
             MeasureSpec.makeMeasureSpec(
                 measuredWidth - paddingLeft - paddingRight,
                 MeasureSpec.EXACTLY
@@ -89,19 +89,19 @@ abstract class PullToRefBase @JvmOverloads constructor(
     open fun ensureTarget() {
         // Don't bother getting the parent height if the parent hasn't been laid
         // out yet.
-        if (mTarget == null) {
+        if (target == null) {
             for (i in 0 until childCount) {
                 val child = getChildAt(i)
-                mTarget = child
+                target = child
                 break
             }
         }
     }
 
     private fun startDragging(y: Float) {
-        if (!mIsBeingDragged) {
-            mInitialMotionY = mInitialDownY
-            mIsBeingDragged = true
+        if (!isBeingDragged) {
+            initialMotionY = initialDownY
+            isBeingDragged = true
         }
     }
 
@@ -109,7 +109,7 @@ abstract class PullToRefBase @JvmOverloads constructor(
         val action = ev.actionMasked
         var pointerIndex = -1
 
-        if (!isEnabled || mNestedScrollInProgress
+        if (!isEnabled || nestedScrollInProgress
         ) {
             // Fail fast if we're not in a state where a swipe is possible
             return false
@@ -118,23 +118,23 @@ abstract class PullToRefBase @JvmOverloads constructor(
 
         when (action) {
             MotionEvent.ACTION_DOWN -> {
-                mActivePointerId = ev.getPointerId(0)
-                mIsBeingDragged = false
-                pointerIndex = ev.findPointerIndex(mActivePointerId)
+                activePointerId = ev.getPointerId(0)
+                isBeingDragged = false
+                pointerIndex = ev.findPointerIndex(activePointerId)
                 if (pointerIndex < 0) {
                     return false
                 }
-                mInitialDownY = ev.getY(pointerIndex)
+                initialDownY = ev.getY(pointerIndex)
             }
 
             MotionEvent.ACTION_UP -> {
-                mIsBeingDragged = false
+                isBeingDragged = false
                 onRelease()
             }
 
             MotionEvent.ACTION_CANCEL,
             MotionEvent.ACTION_MOVE -> {
-                pointerIndex = ev.findPointerIndex(mActivePointerId)
+                pointerIndex = ev.findPointerIndex(activePointerId)
                 if (pointerIndex < 0) {
                     Log.e(LOG_TAG, "Got ACTION_MOVE event but have an invalid active pointer id.")
                     return false
@@ -143,8 +143,8 @@ abstract class PullToRefBase @JvmOverloads constructor(
                 val y = ev.getY(pointerIndex)
                 startDragging(y)
 
-                if (mIsBeingDragged) {
-                    val overscrollTop = (y - mInitialMotionY)
+                if (isBeingDragged) {
+                    val overscrollTop = (y - initialMotionY)
                     onPull(overscrollTop)
                 }
 
@@ -158,7 +158,7 @@ abstract class PullToRefBase @JvmOverloads constructor(
                     )
                     return false
                 }
-                mActivePointerId = ev.getPointerId(pointerIndex)
+                activePointerId = ev.getPointerId(pointerIndex)
             }
         }
         return true
@@ -169,7 +169,7 @@ abstract class PullToRefBase @JvmOverloads constructor(
         var pointerIndex = -1
 
 
-        if (!isEnabled || mNestedScrollInProgress
+        if (!isEnabled || nestedScrollInProgress
         ) {
             // Fail fast if we're not in a state where a swipe is possible
             return false
@@ -177,23 +177,23 @@ abstract class PullToRefBase @JvmOverloads constructor(
 
         when (action) {
             MotionEvent.ACTION_DOWN -> {
-                mActivePointerId = ev.getPointerId(0)
-                mIsBeingDragged = false
-                pointerIndex = ev.findPointerIndex(mActivePointerId)
+                activePointerId = ev.getPointerId(0)
+                isBeingDragged = false
+                pointerIndex = ev.findPointerIndex(activePointerId)
                 if (pointerIndex < 0) {
                     return false
                 }
-                mInitialDownY = ev.getY(pointerIndex)
+                initialDownY = ev.getY(pointerIndex)
             }
 
             MotionEvent.ACTION_UP -> {
-                mIsBeingDragged = false
+                isBeingDragged = false
                 onRelease()
             }
 
             MotionEvent.ACTION_CANCEL,
             MotionEvent.ACTION_MOVE -> {
-                pointerIndex = ev.findPointerIndex(mActivePointerId)
+                pointerIndex = ev.findPointerIndex(activePointerId)
                 if (pointerIndex < 0) {
                     Log.e(LOG_TAG, "Got ACTION_MOVE event but have an invalid active pointer id.")
                     return false
@@ -202,8 +202,8 @@ abstract class PullToRefBase @JvmOverloads constructor(
                 val y = ev.getY(pointerIndex)
                 startDragging(y)
 
-                if (mIsBeingDragged) {
-                    val overscrollTop = (y - mInitialMotionY)
+                if (isBeingDragged) {
+                    val overscrollTop = (y - initialMotionY)
                     onPull(overscrollTop)
                 }
                 return false
@@ -218,10 +218,10 @@ abstract class PullToRefBase @JvmOverloads constructor(
                     )
                     return false
                 }
-                mActivePointerId = ev.getPointerId(pointerIndex)
+                activePointerId = ev.getPointerId(pointerIndex)
             }
         }
-        return mIsBeingDragged
+        return isBeingDragged
     }
 
     override fun onStartNestedScroll(child: View, target: View, nestedScrollAxes: Int): Boolean {
@@ -230,46 +230,46 @@ abstract class PullToRefBase @JvmOverloads constructor(
     }
 
     override fun onNestedScrollAccepted(child: View, target: View, axes: Int) {
-        mNestedScrollingParentHelper.onNestedScrollAccepted(child, target, axes)
+        nestedScrollingParentHelper.onNestedScrollAccepted(child, target, axes)
         startNestedScroll(axes and ViewCompat.SCROLL_AXIS_VERTICAL)
-        mTotalUnconsumed = 0f
-        mNestedScrollInProgress = true
+        totalUnconsumed = 0f
+        nestedScrollInProgress = true
     }
 
     override fun onStopNestedScroll(target: View) {
-        mNestedScrollingParentHelper.onStopNestedScroll(target)
-        mNestedScrollInProgress = false
+        nestedScrollingParentHelper.onStopNestedScroll(target)
+        nestedScrollInProgress = false
 
-        if (mTotalUnconsumed > 0) {
-            mTotalUnconsumed = 0f
+        if (totalUnconsumed > 0) {
+            totalUnconsumed = 0f
         }
         onRelease()
         stopNestedScroll()
     }
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray) {
-        val parentConsumed = mParentScrollConsumed
+        val parentConsumed = parentScrollConsumed
 
-        if (dy > 0 && mTotalUnconsumed > 0) {
-            if (dy > mTotalUnconsumed) {
-                consumed[1] = dy - mTotalUnconsumed.toInt()
-                mTotalUnconsumed = 0f
+        if (dy > 0 && totalUnconsumed > 0) {
+            if (dy > totalUnconsumed) {
+                consumed[1] = dy - totalUnconsumed.toInt()
+                totalUnconsumed = 0f
             } else {
-                mTotalUnconsumed -= dy.toFloat()
+                totalUnconsumed -= dy.toFloat()
                 consumed[1] = dy
             }
-            onPull(mTotalUnconsumed)
+            onPull(totalUnconsumed)
         }
 
-        if (dy < 0 && mTotalUnconsumed < 0) {
-            if (dy < mTotalUnconsumed) {
-                consumed[1] = dy + mTotalUnconsumed.toInt()
-                mTotalUnconsumed = 0f
+        if (dy < 0 && totalUnconsumed < 0) {
+            if (dy < totalUnconsumed) {
+                consumed[1] = dy + totalUnconsumed.toInt()
+                totalUnconsumed = 0f
             } else {
-                mTotalUnconsumed -= dy.toFloat()
+                totalUnconsumed -= dy.toFloat()
                 consumed[1] = dy
             }
-            onPull(mTotalUnconsumed)
+            onPull(totalUnconsumed)
         }
 
         if (dispatchNestedPreScroll(dx - consumed[0], dy - consumed[1], parentConsumed, null)) {
@@ -284,48 +284,48 @@ abstract class PullToRefBase @JvmOverloads constructor(
     ) {
         dispatchNestedScroll(
             dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
-            mParentOffsetInWindow
+            parentOffsetInWindow
         )
 
-        val dy = dyUnconsumed + mParentOffsetInWindow[1]
+        val dy = dyUnconsumed + parentOffsetInWindow[1]
         if (dy < 0 && !canChildScrollUp()) {
-            mTotalUnconsumed += Math.abs(dy).toFloat()
+            totalUnconsumed += Math.abs(dy).toFloat()
         }
 
         if (dy > 0 && !canChildScrollDown()) {
-            mTotalUnconsumed -= Math.abs(dy).toFloat()
+            totalUnconsumed -= Math.abs(dy).toFloat()
         }
 
-        onPull(mTotalUnconsumed)
+        onPull(totalUnconsumed)
     }
 
     // NestedScrollingChild
 
     override fun setNestedScrollingEnabled(enabled: Boolean) {
-        mNestedScrollingChildHelper.isNestedScrollingEnabled = enabled
+        nestedScrollingChildHelper.isNestedScrollingEnabled = enabled
     }
 
     override fun isNestedScrollingEnabled(): Boolean {
-        return mNestedScrollingChildHelper.isNestedScrollingEnabled
+        return nestedScrollingChildHelper.isNestedScrollingEnabled
     }
 
     override fun startNestedScroll(axes: Int): Boolean {
-        return mNestedScrollingChildHelper.startNestedScroll(axes)
+        return nestedScrollingChildHelper.startNestedScroll(axes)
     }
 
     override fun stopNestedScroll() {
-        mNestedScrollingChildHelper.stopNestedScroll()
+        nestedScrollingChildHelper.stopNestedScroll()
     }
 
     override fun hasNestedScrollingParent(): Boolean {
-        return mNestedScrollingChildHelper.hasNestedScrollingParent()
+        return nestedScrollingChildHelper.hasNestedScrollingParent()
     }
 
     override fun dispatchNestedScroll(
         dxConsumed: Int, dyConsumed: Int, dxUnconsumed: Int,
         dyUnconsumed: Int, offsetInWindow: IntArray?
     ): Boolean {
-        return mNestedScrollingChildHelper.dispatchNestedScroll(
+        return nestedScrollingChildHelper.dispatchNestedScroll(
             dxConsumed, dyConsumed,
             dxUnconsumed, dyUnconsumed, offsetInWindow
         )
@@ -337,7 +337,7 @@ abstract class PullToRefBase @JvmOverloads constructor(
         consumed: IntArray?,
         offsetInWindow: IntArray?
     ): Boolean {
-        return mNestedScrollingChildHelper.dispatchNestedPreScroll(
+        return nestedScrollingChildHelper.dispatchNestedPreScroll(
             dx, dy, consumed, offsetInWindow
         )
     }
@@ -361,23 +361,23 @@ abstract class PullToRefBase @JvmOverloads constructor(
         velocityY: Float,
         consumed: Boolean
     ): Boolean {
-        return mNestedScrollingChildHelper.dispatchNestedFling(velocityX, velocityY, consumed)
+        return nestedScrollingChildHelper.dispatchNestedFling(velocityX, velocityY, consumed)
     }
 
     override fun dispatchNestedPreFling(velocityX: Float, velocityY: Float): Boolean {
-        return mNestedScrollingChildHelper.dispatchNestedPreFling(velocityX, velocityY)
+        return nestedScrollingChildHelper.dispatchNestedPreFling(velocityX, velocityY)
     }
 
     private fun canChildScrollUp(): Boolean {
-        return if (mTarget is ListView) {
-            ListViewCompat.canScrollList(mTarget as ListView, -1)
-        } else mTarget?.canScrollVertically(-1) == true
+        return if (target is ListView) {
+            ListViewCompat.canScrollList(target as ListView, -1)
+        } else target?.canScrollVertically(-1) == true
     }
 
     private fun canChildScrollDown(): Boolean {
-        return if (mTarget is ListView) {
-            ListViewCompat.canScrollList(mTarget as ListView, 1)
-        } else mTarget?.canScrollVertically(1) == true
+        return if (target is ListView) {
+            ListViewCompat.canScrollList(target as ListView, 1)
+        } else target?.canScrollVertically(1) == true
     }
 
 }

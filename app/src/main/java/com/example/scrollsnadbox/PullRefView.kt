@@ -16,7 +16,7 @@ class PullRefView @JvmOverloads constructor(
 
     val TAG = "test"
     private var currentTargetOffsetTop = 0
-    private val container by lazy { mTarget!! }
+    private val container by lazy { target!! }
     private lateinit var headerView: ArchView
 
     private val headerTag = "tag"
@@ -62,11 +62,11 @@ class PullRefView @JvmOverloads constructor(
     override fun ensureTarget() {
         // Don't bother getting the parent height if the parent hasn't been laid
         // out yet.
-        if (mTarget == null) {
+        if (target == null) {
             for (i in 0 until childCount) {
                 val child = getChildAt(i)
                 if (child.tag != headerTag) {
-                    mTarget = child
+                    target = child
                     break
                 }
             }
