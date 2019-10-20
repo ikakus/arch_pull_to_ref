@@ -18,6 +18,7 @@ class PullRefView @JvmOverloads constructor(
     private var currentTargetOffsetTop = 0
     private val container by lazy { target!! }
     private lateinit var headerView: ArchView
+    var h: Int = 0
 
     private val headerTag = "tag"
 
@@ -31,15 +32,23 @@ class PullRefView @JvmOverloads constructor(
         addView(headerView)
     }
 
-
     override fun onPull(distance: Float) {
-        var dist = distance.toInt() - currentTargetOffsetTop
 
-        anim(distance.toInt())
-        move(dist)
+        Log.d(TAG, "distance $distance")
 
-        Log.d(TAG, "dist $dist")
-        Log.d(TAG, "offset $currentTargetOffsetTop")
+        val hcp = distance / (h / 100)
+        Log.d(TAG, "percent:  $hcp")
+
+        if (hcp <= 50) {
+            val d = (distance / 100) * (100 - hcp)
+            Log.d(TAG, "d $d")
+
+            anim(d.toInt())
+            move(d.toInt() - currentTargetOffsetTop)
+        }
+
+        Log.d(TAG, "_________________________")
+//        Log.d(TAG, "offset $currentTargetOffsetTop")
 
     }
 
@@ -54,6 +63,7 @@ class PullRefView @JvmOverloads constructor(
 
     override fun onLayout(p0: Boolean, p1: Int, p2: Int, p3: Int, p4: Int) {
         super.onLayout(p0, p1, p2, p3, p4)
+        h = height
         headerView.layout(0, 0, width, 0)
 
         currentTargetOffsetTop = container.top

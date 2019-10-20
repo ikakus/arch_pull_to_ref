@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity(), Onclick {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val range = 1..10
+        val range = 1..30
 
         (range).forEach { element -> myDataset.add(element.toString()) }
         viewManager = LinearLayoutManager(this)

@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.ListView
 import androidx.core.view.*
 import androidx.core.widget.ListViewCompat
+import kotlin.math.abs
 
 
 abstract class PullToRefBase @JvmOverloads constructor(
@@ -17,7 +18,7 @@ abstract class PullToRefBase @JvmOverloads constructor(
     NestedScrollingParent,
     NestedScrollingChild {
 
-    private val LOG_TAG = PullToRefBase::class.java.simpleName
+    private val tag = PullToRefBase::class.java.simpleName
 
     abstract fun onPull(distance: Float)
     abstract fun onRelease()
@@ -98,7 +99,7 @@ abstract class PullToRefBase @JvmOverloads constructor(
         }
     }
 
-    private fun startDragging(y: Float) {
+    private fun startDragging() {
         if (!isBeingDragged) {
             initialMotionY = initialDownY
             isBeingDragged = true
@@ -107,7 +108,7 @@ abstract class PullToRefBase @JvmOverloads constructor(
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         val action = ev.actionMasked
-        var pointerIndex = -1
+        val pointerIndex: Int
 
         if (!isEnabled || nestedScrollInProgress
         ) {
@@ -136,12 +137,11 @@ abstract class PullToRefBase @JvmOverloads constructor(
             MotionEvent.ACTION_MOVE -> {
                 pointerIndex = ev.findPointerIndex(activePointerId)
                 if (pointerIndex < 0) {
-                    Log.e(LOG_TAG, "Got ACTION_MOVE event but have an invalid active pointer id.")
+                    Log.e(tag, "Got ACTION_MOVE event but have an invalid active pointer id.")
                     return false
                 }
 
-                val y = ev.getY(pointerIndex)
-                startDragging(y)
+                startDragging()
 
                 if (isBeingDragged) {
                     val overscrollTop = (y - initialMotionY)
@@ -153,7 +153,7 @@ abstract class PullToRefBase @JvmOverloads constructor(
                 pointerIndex = ev.actionIndex
                 if (pointerIndex < 0) {
                     Log.e(
-                        LOG_TAG,
+                        tag,
                         "Got ACTION_POINTER_DOWN event but have an invalid action index."
                     )
                     return false
@@ -166,7 +166,7 @@ abstract class PullToRefBase @JvmOverloads constructor(
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         val action = ev.actionMasked
-        var pointerIndex = -1
+        val pointerIndex: Int
 
 
         if (!isEnabled || nestedScrollInProgress
@@ -195,12 +195,11 @@ abstract class PullToRefBase @JvmOverloads constructor(
             MotionEvent.ACTION_MOVE -> {
                 pointerIndex = ev.findPointerIndex(activePointerId)
                 if (pointerIndex < 0) {
-                    Log.e(LOG_TAG, "Got ACTION_MOVE event but have an invalid active pointer id.")
+                    Log.e(tag, "Got ACTION_MOVE event but have an invalid active pointer id.")
                     return false
                 }
 
-                val y = ev.getY(pointerIndex)
-                startDragging(y)
+                startDragging()
 
                 if (isBeingDragged) {
                     val overscrollTop = (y - initialMotionY)
@@ -213,7 +212,7 @@ abstract class PullToRefBase @JvmOverloads constructor(
                 pointerIndex = ev.actionIndex
                 if (pointerIndex < 0) {
                     Log.e(
-                        LOG_TAG,
+                        tag,
                         "Got ACTION_POINTER_DOWN event but have an invalid action index."
                     )
                     return false
@@ -289,11 +288,11 @@ abstract class PullToRefBase @JvmOverloads constructor(
 
         val dy = dyUnconsumed + parentOffsetInWindow[1]
         if (dy < 0 && !canChildScrollUp()) {
-            totalUnconsumed += Math.abs(dy).toFloat()
+            totalUnconsumed += abs(dy).toFloat()
         }
 
         if (dy > 0 && !canChildScrollDown()) {
-            totalUnconsumed -= Math.abs(dy).toFloat()
+            totalUnconsumed -= abs(dy).toFloat()
         }
 
         onPull(totalUnconsumed)
