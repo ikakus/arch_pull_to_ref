@@ -1,6 +1,7 @@
 package com.example.scrollsnadbox
 
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
@@ -8,6 +9,7 @@ import android.util.Log
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.core.view.ViewCompat
+import kotlin.math.abs
 
 
 class PullRefView @JvmOverloads constructor(
@@ -84,7 +86,7 @@ class PullRefView @JvmOverloads constructor(
 
     override fun onRelease() {
         val valAnim = ValueAnimator.ofInt(currentTargetOffsetTop, 0)
-        valAnim.duration = 100L
+        valAnim.duration = 200L
         valAnim.interpolator = AccelerateDecelerateInterpolator()
         valAnim.addUpdateListener { it ->
             val value = it.animatedValue as Int
@@ -102,17 +104,40 @@ open class ArchView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
     val lightRed = Paint()
 
-
+    @SuppressLint("DrawAllocation")
     override fun onDraw(canvas: Canvas) {
         val h = top - bottom
         val offset = 0
         val colors = intArrayOf(Color.RED, Color.BLUE)
         val positions = floatArrayOf(0f, 180f / 360f)
+
         val gradient =
             SweepGradient((width / 2).toFloat(), (measuredHeight / 2).toFloat(), colors, positions)
-        lightRed.shader = gradient
-        val rectF =
-            RectF(left.toFloat() - offset, h.toFloat(), right.toFloat() + offset, bottom.toFloat())
-        canvas.drawArc(rectF, 0f, 180f, true, lightRed)
+
+        Log.d("Draw", "h:  $h")
+
+        if (h < 0) {
+            val radialGradient = RadialGradient(
+                (width / 2).toFloat(),
+                (measuredHeight / 2).toFloat(),
+                abs(h).toFloat(),
+                intArrayOf(Color.GREEN, Color.TRANSPARENT),
+                null,
+                Shader.TileMode.CLAMP
+            )
+
+            lightRed.shader = radialGradient
+
+            val rectF =
+                RectF(
+                    left.toFloat() - offset,
+                    h.toFloat(),
+                    right.toFloat() + offset,
+                    bottom.toFloat()
+                )
+            canvas.drawArc(rectF, 0f, 180f, true, lightRed)
+        }
+
+
     }
 }
