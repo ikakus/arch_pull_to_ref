@@ -2,10 +2,7 @@ package com.example.scrollsnadbox
 
 import android.animation.ValueAnimator
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.RectF
+import android.graphics.*
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
@@ -51,7 +48,6 @@ class PullRefView @JvmOverloads constructor(
         }
 
         Log.d(TAG, "_________________________")
-//        Log.d(TAG, "offset $currentTargetOffsetTop")
 
     }
 
@@ -104,14 +100,19 @@ class PullRefView @JvmOverloads constructor(
 open class ArchView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
+    val lightRed = Paint()
+
 
     override fun onDraw(canvas: Canvas) {
-        val p = Paint()
         val h = top - bottom
-        val offset = 150
+        val offset = 0
+        val colors = intArrayOf(Color.RED, Color.BLUE)
+        val positions = floatArrayOf(0f, 180f / 360f)
+        val gradient =
+            SweepGradient((width / 2).toFloat(), (measuredHeight / 2).toFloat(), colors, positions)
+        lightRed.shader = gradient
         val rectF =
             RectF(left.toFloat() - offset, h.toFloat(), right.toFloat() + offset, bottom.toFloat())
-        p.color = Color.BLACK
-        canvas.drawArc(rectF, 0f, 180f, true, p)
+        canvas.drawArc(rectF, 0f, 180f, true, lightRed)
     }
 }
